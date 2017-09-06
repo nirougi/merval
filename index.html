@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Productos de la Nación</title>
+    <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+      i.material-icons {
+        vertical-align: middle;
+      }
+      .btn i.material-icons {
+        font-size: 1.3em;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id="app">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark bd-navbar">
+        <div class="navbar-brand">Productos de la Nación</div>
+        <ul class="navbar-nav mr-auto">
+          <!-- <li class="nav-item">
+            <a class="nav-link">|</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="#">Inicio</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Configuración</a>
+          </li> -->
+        </ul>
+        <div class="navbar-text">Made in Argentina</div>
+      </nav>
+
+      <div class="container-fluid p-t-3">
+        <div class="row">
+          <div class="col col-sm-4 col-lg-3 bg-light" style="min-height: calc(100vh - 56px);">
+            <ul class="nav nav-pills flex-column py-3">
+              <li><a href="#" class="btn btn-success btn-block mb-3" v-on:click.prevent="addProduct">Agregar producto</a></li>
+              <li is="product-menu" v-for="product in products" v-bind:product="product" v-bind:config="config"></li>
+            </ul>
+          </div>
+          <div class="col">
+            <template v-if="selected.product">
+              <div class="row">
+                <div class="col px-4 pt-2 pb-5">
+
+                  <div class="row align-items-center pt-4">
+                    <div class="col">
+                      <h2 class="h3">
+                        <editable v-if="config.editable" :content="product.name" v-on:update="product.name = $event"></editable>
+                        <span v-else>{{ product.name }}</span>
+                      </h2>
+                    </div>
+                    <div class="col col-sm-auto">
+                      <a href="#" v-bind:class="{ 'text-muted': config.editable, 'text-success': !config.editable }" v-on:click.prevent="toggleEdit"><i class="material-icons">mode_edit</i></a>
+                    </div>
+                  </div>
+
+                  <hr class="mb-4">
+
+                  <p class="lead text-muted mb-0">Usuarios</p>
+                  <editable v-if="config.editable" :content="product.info.users" v-on:update="product.info.users = $event"></editable>
+                  <span v-else v-html="marked(product.info.users)"></span>
+
+                  <hr class="my-4">
+
+                  <p class="lead text-muted mb-0">Necesidad</p>
+                  <editable v-if="config.editable" :content="product.info.need" v-on:update="product.info.need = $event"></editable>
+                  <span v-else v-html="marked(product.info.need)"></span>
+
+                  <hr class="my-4">
+
+                  <p class="lead text-muted mb-0">Objetivo</p>
+                  <editable v-if="config.editable" :content="product.info.objetive" v-on:update="product.info.objetive = $event"></editable>
+                  <span v-else v-html="marked(product.info.objetive)"></span>
+
+                  <hr class="my-4">
+
+                  <p class="lead text-muted mb-0">KPIs</p>
+                  <div v-for="(kpi, index) in product.info.kpis">
+                    <div v-if="config.editable" class="row no-gutters mb-3">
+                      <div class="col col-auto pr-2">
+                        <a href="#" v-on:click.prevent="removeKpi(index)" class="text-danger"><i class="material-icons">delete</i></a>
+                      </div>
+                      <div class="col">
+                        <editable :content="kpi" v-on:update="product.info.kpis[index] = $event"></editable>
+                      </div>
+                    </div>
+                    <span v-else v-html="marked(kpi)"></span>
+                  </div>
+                  <p v-if="config.editable"><a href="#" class="btn btn-success btn-sm" v-on:click.prevent="addKpi">Agregar kpi</a></p>
+
+                  <hr class="my-4">
+
+                  <p class="lead text-muted mb-0">Comunicación</p>
+                  <editable v-if="config.editable" :content="product.info.message" v-on:update="product.info.message = $event"></editable>
+                  <span v-else v-html="marked(product.info.message)"></span>
+
+                  <hr class="my-4">
+
+                  <p class="lead text-muted mb-0">Dependencias</p>
+                  <editable v-if="config.editable" :content="product.info.dependencies" v-on:update="product.info.dependencies = $event"></editable>
+                  <span v-else v-html="marked(product.info.dependencies)"></span>
+
+                  <hr class="my-4">
+
+                  <p class="lead text-muted mb-0">Experiencia anterior</p>
+                  <editable v-if="config.editable" :content="product.experience.initial" v-on:update="product.experience.initial = $event"></editable>
+                  <span v-else v-html="marked(product.experience.initial)"></span>
+
+                  <hr class="my-4">
+
+                  <p class="lead text-muted mb-0">Experiencia ideal</p>
+                  <editable v-if="config.editable" :content="product.experience.expected" v-on:update="product.experience.expected = $event"></editable>
+                  <span v-else v-html="marked(product.experience.expected)"></span>
+
+                  <hr class="my-4">
+                  
+                  <p class="lead text-muted">Historias de usuario</p>
+
+                  <p>
+                    <div is="platform-menu" v-for="(platform, index) in product.platforms" v-bind:platform="platform" v-bind:index="index" v-bind:config="config"> </div>
+                    <a v-if="config.editable" href="#" class="btn btn-success btn-sm mb-1" v-on:click.prevent="addPlatform">+ plataforma</a>
+                  </p>
+
+                  <ul class="nav nav-pills mb-4">
+                    <div is="version-menu" v-for="(version, index) in platform.versions" v-bind:version="version"  v-bind:index="index" v-bind:config="config"> </div>
+                    <a v-if="config.editable" href="#" class="btn btn-success btn-sm mb-1" v-on:click.prevent="addVersion">+ versión</a>
+                  </ul>
+
+                  <div v-for="(story, index) in version.stories">
+                    <div v-if="config.editable" class="row no-gutters mb-3">
+                      <div class="col col-auto pr-2">
+                        <a href="#" v-on:click.prevent="removeStory(index)" class="text-danger"><i class="material-icons">delete</i></a>
+                      </div>
+                      <div class="col">
+                        <editable :content="story.text" v-on:update="version.stories[index].text = $event"></editable>
+                      </div>
+                    </div>
+                    <span v-else v-html="marked(story.text)"></span>
+                  </div>
+                  <p v-if="config.editable"><a href="#" class="btn btn-success btn-sm" v-on:click.prevent="addStory">Agregar historia</a></p>
+
+                </div>
+                <div class="col col-sm-3 col-lg-3 pl3">
+                  <h5 class="pt-3 my-3">Participantes</h5>
+                  <div v-for="user in product.leaders">
+                    <h6 class="mb-0">
+                      <editable v-if="config.editable" :content="user.name" v-on:update="user.name = $event"></editable>
+                      <span v-else>{{ user.name }}</span>
+                    </h6>
+                    <small>
+                      <editable v-if="config.editable" :content="user.role" v-on:update="user.role = $event"></editable>
+                      <span v-else>{{ user.role }}</span>
+                    </small>
+                    <hr>
+                  </div>
+
+                  <p v-if="config.editable"><a href="#" class="btn btn-success btn-sm" v-on:click.prevent="addLeader">Agregar</a></p>
+                  <hr v-if="config.editable">
+
+                  <h5 class="my-3">Externos</h5>
+                  <div v-for="user in product.externals">
+                    <div class="row no-gutters mb-3">
+                      <div v-if="config.editable" class="col col-auto pr-2">
+                        <a href="#" v-on:click.prevent="removeExternal(user)" class="text-danger"><i class="material-icons">delete</i></a>
+                      </div>
+                      <div class="col">
+                        <h6 class="mb-0">
+                          <editable v-if="config.editable" :content="user.name" v-on:update="user.name = $event"></editable>
+                          <span v-else>{{ user.name }}</span>
+                        </h6>
+                        <small>
+                          <editable v-if="config.editable" :content="user.position" v-on:update="user.position = $event"></editable>
+                          <span v-else>{{ user.position }}</span>
+                          -
+                          <editable v-if="config.editable" :content="user.area" v-on:update="user.area = $event"></editable>
+                          <span v-else>{{ user.area }}</span>
+                        </small>
+                      </div>
+                    </div>
+                    <hr>
+                  </div>
+
+                  <p v-if="config.editable"><a href="#" class="btn btn-success btn-sm" v-on:click.prevent="addExternal">Agregar</a></p>
+
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript" src="https://unpkg.com/marked@0.3.6"></script>
+    <script type="text/javascript" src="https://unpkg.com/vue"></script>
+    <script src="js/methods.js"></script>
+  </body>
+</html>
