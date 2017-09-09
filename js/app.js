@@ -1,85 +1,3 @@
-var MongoClient = require('mongodb').MongoClient;
-// var Db = require('mongodb').Db;
-var ObjectId = require('mongodb').ObjectID;
-var assert = require('assert');
-var $ = require('jQuery');
-// var Vue = require('vue');
-var moment = require('moment');
-
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
-
-
-// ==============================
-// Mongo Config
-// ==============================
-
-
-var user = {
-  host: 'jinik.com.ar:6664',
-  db: 'products',
-  name: 'jinik',
-  password: 'prn1comanco',
-}
-
-var configoose = {
-    uri: 'mongodb://'+ user.name +':'+ user.password +'@'+ user.host +'/'+ user.db ,
-    options : { 
-        promiseLibrary: require('bluebird') 
-    }
-}
-
-mongoose.connect( configoose.uri, { useMongoClient: true } );
-
-
-// ==============================
-// Schemas
-// ==============================
-
-
-// Updates
-
-var productSchema = Schema({
-  name: String,
-  leaders: [{
-    owner: String,
-    name: String,
-    email: String
-  }],
-  externals: [{
-    name: String,
-    area: String,
-    position: String,
-    email: String
-
-  }],
-  info: {
-    users: String,
-    need: String,
-    objetive: String,
-    message: String,
-    dependencies: String,
-    kpis: Array,
-  },
-  experience: {
-    initial: String,
-    expected: String
-  },
-  platforms: [{
-    id: String,
-    version: [{
-      id: String,
-      stories: [{
-        id: String,
-        text: String
-      }]
-    }]
-  }],
-});
-
-var Product = mongoose.model('Product', productSchema);
-
-
 // ==============================
 // Data
 // ==============================
@@ -108,31 +26,37 @@ var handleError = function(error){
 // Data Base
 // ==============================
 
+var api = {
+  url: 'http://jinik.com.ar:5000/products'
+}
+
 var db = {
   loadProducts: function(){
-    
-    var cursor = Product.find().cursor();
 
-    data.products = [];
+    $.ajax({
+      dataType: "json",
+      type: 'GET',
+      url: api.url,
+      error: handleError,
+      success: function(response){
+        data.products = [];
 
-    cursor.on('data', function(product) {
-      // console.log(product.platforms.toObject());
-      product = product.toObject();
-      product.isActive = false;
-      data.products.push( product );
-    });
+        response._items.forEach(function(product){
+          product.isActive = false;
+          data.products.push( product );
+        })
 
-    cursor.on('close', function() {
-      vm.selectProduct(data.products[0])
+        vm.selectProduct(data.products[0])
+      }
     });
 
   },
 
   addProduct: function(){
     
-    var newProduct = new Product({
+    var newProduct = {
       "name" : "En blanco",
-      "leaders" : {},
+      "leaders" : [],
       "externals" : [],
       "info" : {
         "users" : "Sin desarrollar.",
@@ -161,40 +85,71 @@ var db = {
           ]
         }
       ]
-    });
+    };
 
-    newProduct.save(function (err) {
-      db.loadProducts();
+    console.log(JSON.stringify(newProduct))
+
+    $.ajax({
+      dataType: "json",
+      contentType: "application/json",
+      type: 'POST',
+      url: api.url,
+      data: JSON.stringify(newProduct),
+      error: handleError,
+      success: function(response){
+        console.log(response)
+        db.loadProducts();
+      }
     });
 
   },
 
-  removeProduct: function(id){
-    Product.findById(id).remove(function (err) {
-      db.loadProducts();
+  removeProduct: function(id, etag){
+    $.ajax({
+      dataType: "json",
+      type: 'DELETE',
+      url: api.url +'/'+ id,
+      headers: {
+        'If-Match': etag
+      },
+      error: handleError,
+      success: function(response){
+        console.log(response)
+        db.loadProducts();
+      }
     });
   },
 
   saveChanges: function(){
-    Product.findById(data.product._id, function (err, product) {
-      if (err) return handleError(err);
-      
-      product.name = data.product.name;
-      product.leaders = data.product.leaders;
-      product.externals = data.product.externals;
-      product.info = data.product.info;
-      product.experience = data.product.experience;
-      product.platforms = data.product.platforms;
 
-      product.save(function (err, product) {
-        if (err) return handleError(err);
-      });
+    editedProduct = data.product;
+    delete editedProduct._links;
+    delete editedProduct.isActive;
+
+    $.ajax({
+      dataType: "json",
+      contentType: "application/json",
+      type: 'PATCH',
+      url: api.url +'/'+ data.product._id,
+      data: JSON.stringify(data.product),
+      headers: {
+        'If-Match': data.product._etag
+      },
+      error: handleError,
+      success: function(response){
+        console.log(response)
+        console.log('Saved!')
+        data.product._etag = response._etag;
+        // db.loadProducts();
+      }
     });
   }
 }
 
 
-db.loadProducts();
+$( document ).ready(function() {
+  db.loadProducts();
+});
 
 
 // ==============================
@@ -331,7 +286,7 @@ var vm = new Vue({
     },
 
     removeProduct: function(product){
-      db.removeProduct(product._id)
+      db.removeProduct(product._id, product._etag)
     },
 
     selectPlatform: function (selected) {
@@ -343,7 +298,11 @@ var vm = new Vue({
     addPlatform: function(){
       data.product.platforms.push({
         id: 'plataforma_nueva',
-        versions: []
+        versions: [
+          {
+            stories: []
+          }
+        ]
       })
       db.saveChanges()
     },
