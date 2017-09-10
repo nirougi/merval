@@ -177,6 +177,7 @@ var app = {
         vm.removeError();
       }
     }else{
+      app.saveConfig();
       data.config.show = 'settings';
       // vm.showError('Todavía no configuraste el servidor.', 'Revisá los datos de la conexión al servidor en la pantalla de configuración.');
     }

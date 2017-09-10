@@ -24,24 +24,29 @@
 
     <div id="app">
       <nav class="navbar navbar-expand-lg navbar-dark bg-dark bd-navbar">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
         <div class="navbar-brand">
           <template v-if="settings.appname">{{ settings.appname }}</template>
           <template v-else>Merval</template>
         </div>
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item">
-            <a class="nav-link">|</a>
-          </li>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav mr-auto">
+            <!-- <li class="nav-item">
+              <a class="nav-link">|</a>
+            </li> -->
 
-          <li is="app-menu" v-for="(page, name) in config.pages" v-bind:page="page" v-bind:name="name" v-bind:config="config"></li>
-        </ul>
-        <div class="text-muted">Made in <span class="flag">🇦🇷</span><span class="sr-only">Argentina</span></div>
+            <li is="app-menu" v-for="(page, name) in config.pages" v-bind:page="page" v-bind:name="name" v-bind:config="config"></li>
+          </ul>
+        </div>
+        <div class="text-muted d-none d-sm-block text-right" style="min-width: 100px">Made in <span class="flag">🇦🇷</span><span class="sr-only">Argentina</span></div>
       </nav>
 
       <template v-if="config.show == 'settings'">
       <div class="container">
         <div class="row justify-content-md-center">
-          <div class="col-6">
+          <div class="col-12 col-md-8 col-lg-6">
             <div class="card my-5">
               <div class="card-header">
                 Configuración
@@ -81,7 +86,7 @@
         <template v-if="config.error.show">
           <div class="container">
             <div class="row justify-content-md-center my-5">
-              <div class="col-8">
+              <div class="col-12 col-md-8">
                 <div class="alert alert-warning" role="alert">
                   <h3 class="alert-heading">{{ config.error.title }}</h3>
                   <div v-html="marked(config.error.text)"></div>
@@ -92,7 +97,7 @@
         </template>
         <div v-else class="container-fluid p-t-3">
           <div class="row">
-            <div class="col col-sm-4 col-lg-3 bg-light" style="min-height: calc(100vh - 56px);">
+            <div class="col-12 col-sm-4 col-lg-3 bg-light" style="min-height: calc(100vh - 56px);">
               <ul class="nav nav-pills flex-column py-3">
                 <li><a href="#" class="btn btn-success btn-block mb-3" v-on:click.prevent="addProduct">Agregar producto</a></li>
                 <li is="product-menu" v-for="product in products" v-bind:product="product" v-bind:config="config"></li>
