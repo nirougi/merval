@@ -4,7 +4,23 @@
 
 var data = {
   config: {
-    editable: false
+    editable: false,
+    show: 'home',
+    pages: {
+      home: 'Inicio', 
+      settings: 'Configuración'
+    },
+    error: {
+      show: false,
+      type: '',
+      text: ''
+    }
+  },
+  settings: {
+    appname: '',
+    server: '',
+    username: '',
+    password: ''
   },
   products: [],
   product: {},
@@ -26,18 +42,16 @@ var handleError = function(error){
 // Data Base
 // ==============================
 
-var api = {
-  url: 'http://jinik.com.ar:5000/products'
-}
-
 var db = {
   loadProducts: function(){
 
     $.ajax({
       dataType: "json",
       type: 'GET',
-      url: api.url,
-      error: handleError,
+      url: data.settings.server,
+      headers: {
+        "Authorization": "Basic " + btoa(data.settings.username + ":" + data.settings.password)
+      },
       success: function(response){
         data.products = [];
 
@@ -47,6 +61,14 @@ var db = {
         })
 
         vm.selectProduct(data.products[0])
+      },
+      error: function(error){
+        console.log(error)
+        if(error.status == 401){
+          vm.showError('Faltan las cerdenciales de autenticación.', 'Agregá el usuario y contraseña necesarios para conectarse al servidor.');
+        }else{
+          vm.showError('No pudimos cargar los datos.', 'Revisá que los datos de la conexión en la pantalla de configuración estén bien.');
+        }
       }
     });
 
@@ -87,17 +109,17 @@ var db = {
       ]
     };
 
-    console.log(JSON.stringify(newProduct))
-
     $.ajax({
       dataType: "json",
       contentType: "application/json",
       type: 'POST',
-      url: api.url,
+      url: data.settings.server,
+      headers: {
+        "Authorization": "Basic " + btoa(data.settings.username + ":" + data.settings.password)
+      },
       data: JSON.stringify(newProduct),
       error: handleError,
       success: function(response){
-        console.log(response)
         db.loadProducts();
       }
     });
@@ -108,13 +130,13 @@ var db = {
     $.ajax({
       dataType: "json",
       type: 'DELETE',
-      url: api.url +'/'+ id,
+      url: data.settings.server +'/'+ id,
       headers: {
-        'If-Match': etag
+        'If-Match': etag,
+        "Authorization": "Basic " + btoa(data.settings.username + ":" + data.settings.password)
       },
       error: handleError,
       success: function(response){
-        console.log(response)
         db.loadProducts();
       }
     });
@@ -130,33 +152,84 @@ var db = {
       dataType: "json",
       contentType: "application/json",
       type: 'PATCH',
-      url: api.url +'/'+ data.product._id,
+      url: data.settings.server +'/'+ data.product._id,
       data: JSON.stringify(data.product),
       headers: {
-        'If-Match': data.product._etag
+        'If-Match': data.product._etag,
+        "Authorization": "Basic " + btoa(data.settings.username + ":" + data.settings.password)
       },
       error: handleError,
       success: function(response){
-        console.log(response)
-        console.log('Saved!')
         data.product._etag = response._etag;
-        // db.loadProducts();
       }
     });
   }
 }
 
 
-$( document ).ready(function() {
-  db.loadProducts();
-});
+var app = {
+  start: function(){
+    if( app.loadConfig() ){
+      if(data.settings.server == ''){
+        vm.showError('Todavía no configuraste el servidor.', 'Hacelo en la pantalla de configuración en el menú de arriba. Si no tenés un servidor corriendo, [conocé más de cómo hacerlo](http://todo.com).');
+      }else{
+        db.loadProducts();
+        vm.removeError();
+      }
+    }else{
+      data.config.show = 'settings';
+      // vm.showError('Todavía no configuraste el servidor.', 'Revisá los datos de la conexión al servidor en la pantalla de configuración.');
+    }
+  },
+
+  loadConfig: function(){
+    if(typeof(Storage) !== "undefined") {
+      if( localStorage.getItem("merval-settings") != undefined ){
+        data.settings = JSON.parse( localStorage.getItem("merval-settings"))
+        return true;
+      }else{
+        return false
+      }
+    }
+  },
+
+  saveConfig: function(){
+    if(typeof(Storage) !== "undefined") {
+      localStorage.setItem("merval-settings", JSON.stringify(data.settings));
+      app.start();
+    }
+  }
+}
+
+$(document).ready(function(){
+  app.start();
+})
 
 
 // ==============================
 // Vue Components
 // ==============================
 
-// Menu element
+// Menu elements
+
+Vue.component('app-menu', {
+  props: ['page', 'name', 'config'],
+  template:`<li class="nav-item">
+              <a class="nav-link" v-bind:class="isActive(name)" v-on:click.prevent="select(name)" href="#">{{ page }}</a>
+            </li>`,
+  methods: {
+    select: function (page) {
+      data.config.show = page;
+      // vm.saveConfig();
+    },
+
+    isActive: function(page){
+      if(page === data.config.show){
+        return 'active'
+      }
+    }
+  }
+})
 
 Vue.component('product-menu', {
   props: ['product', 'config'],
@@ -268,8 +341,6 @@ Vue.component('editable',{
 var vm = new Vue({
   el: '#app',
   data: data,
-  computed: {
-  },
   methods: {
     marked: function (text) {
       return marked(text, { sanitize: true })
@@ -376,6 +447,20 @@ var vm = new Vue({
         db.saveChanges()
       }
       Vue.set(data.config, 'editable', !data.config.editable);
+    },
+
+    saveConfig: function(){
+      app.saveConfig()
+    },
+
+    showError: function(title, text){
+      data.config.error.title = title;
+      data.config.error.text = text;
+      data.config.error.show = true;
+    },
+
+    removeError: function(){
+      data.config.error.show = false;
     }
   }
 })
