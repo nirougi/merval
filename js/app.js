@@ -48,7 +48,7 @@ var db = {
     $.ajax({
       dataType: "json",
       type: 'GET',
-      url: data.settings.server,
+      url: data.settings.server,//+ '?sort=category',
       headers: {
         "Authorization": "Basic " + btoa(data.settings.username + ":" + data.settings.password)
       },
@@ -78,6 +78,7 @@ var db = {
     
     var newProduct = {
       "name" : "En blanco",
+      "category" : '',
       "leaders" : [],
       "externals" : [],
       "info" : {
@@ -342,6 +343,23 @@ Vue.component('editable',{
 var vm = new Vue({
   el: '#app',
   data: data,
+  computed: {
+    categories: function(){
+      var categories = {};
+
+      data.products.forEach(function(product){
+
+        if(typeof categories[ product.category ] !== 'undefined'){
+          categories[ product.category ].push( product )
+
+        }else{
+          categories[ product.category ] = [ product ];
+        }
+      });
+
+      return categories;
+    }
+  },
   methods: {
     marked: function (text) {
       return marked(text, { sanitize: true })
@@ -405,7 +423,6 @@ var vm = new Vue({
     },
 
     removeKpi: function(index){
-      console.log(index)
       data.product.info.kpis.splice(index,1)
       db.saveChanges()
     },
@@ -419,7 +436,6 @@ var vm = new Vue({
     },
 
     removeStory: function(index){
-      console.log(index)
       data.version.stories.splice(index,1)
       db.saveChanges()
     },
@@ -433,6 +449,11 @@ var vm = new Vue({
       db.saveChanges()
     },
 
+    removeLeader: function(index){
+      data.product.leaders.splice(index,1)
+      db.saveChanges()
+    },
+
     addExternal: function(){
       data.product.externals.push({
         area: '---',
@@ -440,6 +461,11 @@ var vm = new Vue({
         name: 'Juan Perez',
         email: 'hola@gmail.com'
       })
+      db.saveChanges()
+    },
+
+    removeExternal: function(index){
+      data.product.externals.splice(index,1)
       db.saveChanges()
     },
 

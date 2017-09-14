@@ -98,10 +98,19 @@
         <div v-else class="container-fluid p-t-3">
           <div class="row">
             <div class="col-12 col-sm-4 col-lg-3 bg-light" style="min-height: calc(100vh - 56px);">
-              <ul class="nav nav-pills flex-column py-3">
+              <p class="mt-3"><a href="#" class="btn btn-success btn-block mb-3" v-on:click.prevent="addProduct">Agregar producto</a></p>
+              <!-- <ul class="nav nav-pills flex-column py-3">
                 <li><a href="#" class="btn btn-success btn-block mb-3" v-on:click.prevent="addProduct">Agregar producto</a></li>
                 <li is="product-menu" v-for="product in products" v-bind:product="product" v-bind:config="config"></li>
-              </ul>
+              </ul> -->
+              <template v-for="(categoryProducts, category) in categories">
+                <hr>
+                <p class="lead mb-0 text-muted" v-if="category">{{ category }}</p>
+                <p class="lead mb-0 text-muted" v-else>Sin categoría</p>
+                <ul class="nav nav-pills flex-column py-3">
+                  <li is="product-menu" v-for="product in categoryProducts" v-bind:product="product" v-bind:config="config"></li>
+                </ul>
+              </template>
             </div>
             <div class="col">
               <template v-if="selected.product">
@@ -112,10 +121,17 @@
                       <div class="col">
                         <h2 class="h3">
                           <editable v-if="config.editable" :content="product.name" v-on:update="product.name = $event"></editable>
-                          <span v-else>{{ product.name }}</span>
+                          <span v-else>{{ product.name }} </span>
                         </h2>
                       </div>
                       <div class="col col-sm-auto">
+                        <select v-if="config.editable" v-model="product.category" class="mr-4">
+                          <option value="">Ninguno</option>
+                          <option value="Producto">Producto</option>
+                          <option value="Plataforma">Plataforma</option>
+                          <option value="Asistencia">Asistencia</option>
+                        </select>
+                        <span v-else class="text-muted mr-3">{{ product.category }}</span>
                         <a href="#" v-bind:class="{ 'text-muted': config.editable, 'text-success': !config.editable }" v-on:click.prevent="toggleEdit"><i class="material-icons">mode_edit</i></a>
                       </div>
                     </div>
@@ -209,14 +225,21 @@
                   <div class="col col-sm-3 col-lg-3 pl3">
                     <h5 class="pt-3 my-3">Participantes</h5>
                     <div v-for="user in product.leaders">
-                      <h6 class="mb-0">
-                        <editable v-if="config.editable" :content="user.name" v-on:update="user.name = $event"></editable>
-                        <span v-else>{{ user.name }}</span>
-                      </h6>
-                      <small>
-                        <editable v-if="config.editable" :content="user.role" v-on:update="user.role = $event"></editable>
-                        <span v-else>{{ user.role }}</span>
-                      </small>
+                      <div class="row">
+                        <div v-if="config.editable" class="col col-auto pr-2">
+                          <a href="#" v-on:click.prevent="removeLeader(user)" class="text-danger"><i class="material-icons">delete</i></a>
+                        </div>
+                        <div class="col">
+                          <h6 class="mb-0">
+                            <editable v-if="config.editable" :content="user.name" v-on:update="user.name = $event"></editable>
+                            <span v-else>{{ user.name }}</span>
+                          </h6>
+                          <small>
+                            <editable v-if="config.editable" :content="user.role" v-on:update="user.role = $event"></editable>
+                            <span v-else>{{ user.role }}</span>
+                          </small>
+                        </div>
+                      </div>
                       <hr>
                     </div>
 
