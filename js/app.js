@@ -345,17 +345,34 @@ var vm = new Vue({
   data: data,
   computed: {
     categories: function(){
-      var categories = {};
+      var categories = {
+        // Producto: [],
+        // Plataforma: []
+      };
 
       data.products.forEach(function(product){
 
-        if(typeof categories[ product.category ] !== 'undefined'){
+        if(typeof categories[ product.category ] !== 'undefined'){ 
           categories[ product.category ].push( product )
 
         }else{
           categories[ product.category ] = [ product ];
         }
       });
+
+      $.each(categories, function(index, products){
+
+        products.sort(function(a, b) {
+          if (a.name < b.name){
+            return -1;
+          }else{
+            return 1;
+          }
+        });
+
+        categories[index] = products;
+
+      })
 
       return categories;
     }
