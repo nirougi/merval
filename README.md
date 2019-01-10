@@ -1,30 +1,14 @@
-# electron-quick-start
+# Merval
 
-**Clone and run for a quick way to see an Electron in action.**
+Merval es un proyecto que hice en un fin de semana como UI para poder definir de forma estructurada la información detallada de un producto.
+También fue una excusa para aprender el framework [vue.js](https://vuejs.org) haciendo algo que me podía servir para el trabajo.
 
-This is a minimal Electron application based on the [Quick Start Guide](http://electron.atom.io/docs/latest/tutorial/quick-start) within the Electron documentation.
+El proyecto es totalmente front end (prácticamente son dos archivos que hacen todo).
 
-A basic Electron application needs just these files:
+Como base de datos para guardar la información usé [Eve](http://docs.python-eve.org/en/latest/), que dispone un RESTful Web Service.
+Merval va a pedir la configuración de la API para poder conectarse y lo guarda en local storage.
 
-- `index.html` - A web page to render.
-- `main.js` - Starts the app and creates a browser window to render HTML.
-- `package.json` - Points to the app's main file and lists its details and dependencies.
+La parte más interesante del proyecto fue usar **vue.js** para tener tanto la vista de lectura como de edición en la misma pantalla. Esto hace que la edición sea muy rápida, y al permitir Markdown, bastante versátil al momento de redactar las definiciones del producto.
+Para cambiar entre modos de lectura y edición se puede usar el alt derecho como shortcut.
 
-You can learn more about each of these components within the [Quick Start Guide](http://electron.atom.io/docs/latest/tutorial/quick-start).
-
-## To Use
-
-To clone and run this repository you'll need [Git](https://git-scm.com) and [Node.js](https://nodejs.org/en/download/) (which comes with [npm](http://npmjs.com)) installed on your computer. From your command line:
-
-```bash
-# Clone this repository
-git clone https://github.com/electron/electron-quick-start
-# Go into the repository
-cd electron-quick-start
-# Install dependencies and run the app
-npm install && npm start
-```
-
-Learn more about Electron and its API in the [documentation](http://electron.atom.io/docs/latest).
-
-#### License [CC0 (Public Domain)](LICENSE.md)
+![Video mostrando la interfaz](merval.gif)
